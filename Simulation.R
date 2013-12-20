@@ -18,14 +18,16 @@ source("C:\\Users\\boucheka\\Documents\\Thesis\\Simulations_Code\\RandomNormal.R
 
 initialize_values(t=TRUE)
 
-beta1 <- rep(0,p)
-beta0 <- rep(0,n)
+generate_cases()
 
-for(j in 1:m) {
-  generate_data()
-  beta1hat <- CLS(y=y, X=X)
-  corr[,j] <- cor(y,X)
+for(c in 1:cases) {
+  get_case(case=c)
+  for(j in 1:m) {
+    generate_data()
+    beta1hat <- CLS(y=y, X=X)
+    corr.pearson[,j] <- cor(y,X)
+#     corr.dist[,j] <- distance_corr(y,X)
+  }
 }
 
-maxes_meds_plots()
-
+maxes_meds_plots(corr=corr.pearson)

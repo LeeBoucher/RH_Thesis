@@ -10,7 +10,7 @@
 
 ################################################################################
 
-library(mvtnorm)
+# library(mvtnorm)
 library(Matrix)
 
 CLS <- function(y, X, tau) {
