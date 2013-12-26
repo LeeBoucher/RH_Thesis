@@ -12,6 +12,7 @@
 
 # library(mvtnorm)
 library(Matrix)
+library(energy)
 
 CLS <- function(y, X, tau) {
   if(missing(tau)) { tau <- tau_weights() }
@@ -30,7 +31,11 @@ tau_weights <- function(w) {
   
 }
 
-distance_corr <- function() {
-  
+distance_corr <- function(y,X) {
+  # helpful reference wikipedia page: http://en.wikipedia.org/wiki/Distance_correlation#Distance_correlation
+  # currently using functions from the "energy" package
+#   dcs <- DCOR(y=y, x=X)
+  dcs <- DCOR(y=y, x=X, index=0.5)
+  dist_corr <- dcs$dCov / sqrt( dcs$dVarX * dcs$dVarY)
 }
 

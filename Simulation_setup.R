@@ -15,29 +15,22 @@ library(Matrix)
 
 # Set initial values, define functions for generating data in linear model
 
-initialize_values <- function(n, m, p, t, s, seed) {
+initialize_values <- function(n, m, p, t=FALSE, s, seed=20131105) {
+  set.seed(seed)
   default_n <- 60
   default_m <- 500
   default_p <- 1000
   default_s <- 1
   
-  if(missing(t)) { t <- FALSE }
   if(t) {
     default_n <- 6
     default_m <- 50
     default_p <- 100
-#     default_n <- 2
-#     default_m <- 5
-#     default_p <- 10
   }
   
   if(missing(n)) { n <- default_n }
   if(missing(m)) { m <- default_m }
   if(missing(p)) { p <- default_p }
-  
-  default_seed <- 20131105
-  if(missing(seed)) { seed <- default_seed }
-  set.seed(seed)
   
   n <<- n # number of y_i's/observations
   m <<- m # number of replicate data sets
@@ -79,6 +72,7 @@ get_case <- function(case) {
   beta0 <<- rep(0,n)
   beta1 <<- rep(0,p)
   varcov <<- varcov.generate(p=p)
+#   varcov <<- diag(p)
   rs <<- 0.6
 }
 
@@ -99,7 +93,8 @@ generate_data <- function() {
 # #   beta0 <<- rep(0,p)
 #   y <<- e + X %*% beta1 + beta0 # just noise
   
-  X <<- rmvnorm(n, mu=rep(0,p), Sigma=varcov)
+#   X <<- rmvnorm(n, mu=rep(0,p), Sigma=varcov)
+  X <<- matrix(data=rnorm(n*p, mean=0, sd=1), nrow=n, ncol=p)
   
   if(t(beta1) %*% beta1 == 0) {
     e.sd <<- 1
@@ -126,12 +121,59 @@ varcov.generate <- function(p, blocks, default_c) {
   varcov <- matrix(bdiag(apply(c, 1, function(x) {matrix(data=rep(x[1],x[2]**2), nrow=x[2]) + diag(rep(1-x[1], x[2]))})), nrow=p)
 }
 
-maxes_meds_plots <- function(corr) {
-  maxes <<- apply(abs(corr), 2, max)
-  plot(density(maxes))
-  
-  meds <<- apply(abs(corr), 2, median)
-  # plot(density(meds))
+maxes_meds <- function(maxes_plots=T,meds_plots=T) {
+  maxes.dist <<- apply(abs(corr.dist), 2, max)
+  maxes.pearson <<- apply(abs(corr.pearson), 2, max)
+  meds.dist <<- apply(abs(corr.dist), 2, median)
+  meds.pearson <<- apply(abs(corr.pearson), 2, median)
+  if(T){ maxes_med_plots()} # TODO: fix the condition
 }
+
+maxes_med_plots <- function() {
+#   par(mfcol=c(2,2))
+#   plot(density(maxes.dist))
+#   plot(density(maxes.pearson))
+#   plot(density(meds.dist))
+#   plot(density(meds.pearson))
+  
+#   plot(density(maxes.dist), main="Maxes", col="blue", xlim=c(0,1))
+#   lines(density(maxes.pearson), col="green")
+#   plot(density(meds.dist), main="Medians", col="blue", xlim=c(0,1))
+#   lines(density(meds.pearson), col="green")
+  
+  plot(density(maxes.dist), main="Maximum and Median Correlations", col="blue2", xlim=c(0,1))
+  lines(density(maxes.pearson), col="chartreuse4")
+  lines(density(meds.dist), col="cornflowerblue")
+  lines(density(meds.pearson), col="chartreuse2")
+}
+
+# maxes_meds_plots <- function() {
+# #   par(mfcol=c(2,2))
+#   meds_plots(corr=corr.dist, corr_type="Distance Corr")
+# #   par(new=T)
+#   meds_plots(corr=corr.pearson, corr_type="Pearson Corr")
+# #   maxes_plots(corr=corr.dist, corr_type="Distance Corr")
+# #   maxes_plots(corr=corr.pearson, corr_type="Pearson Corr")
+# }
+# 
+# maxes_plots <- function(corr, corr_type) {
+#   maxes <<- apply(abs(corr), 2, max)
+#   if(!missing(corr_type)) {
+#     graph_title = paste("Maxes of ", corr_type)
+#     plot(density(maxes), main=graph_title)
+#   } else {
+#     plot(density(maxes))
+#   }
+# }
+# 
+# meds_plots <- function(corr, corr_type) {
+#   meds <<- apply(abs(corr), 2, median)
+#   if(!missing(corr_type)) {
+#     graph_title = paste("Medians of ", corr_type)
+#     plot(density(meds), main=graph_title)
+#   } else {
+#     plot(density(meds))
+#   }
+# }
 
 
