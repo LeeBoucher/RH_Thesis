@@ -18,7 +18,7 @@ source("C:\\Users\\boucheka\\Documents\\Thesis\\Simulations_Code\\OtherPeoplesCo
 
 run_time <- Sys.time()
 
-initialize_values(t=TRUE)
+initialize_values(t=TRUE, dcorr_index=1)
 # initialize_values()
 
 generate_cases()
@@ -28,10 +28,10 @@ for(c in 1:cases) {
   for(j in 1:m) {
     generate_data()
 #     beta1hat <- CLS(y=y, X=X)
-#     corr.pearson[,j] <- cor(y,X)
     corr.pearson[,j] <- abs(cor(y,X))
-    corr.dist[,j] <- distance_corr(y,X)
-#     corr.dist[,j] <- abs(cor(y,X))
+    for(k in 1:p) {
+      corr.dist[k,j] <- distance_corr(y,X[,k])
+    }
   }
 }
 
