@@ -12,7 +12,9 @@
 
 # library(mvtnorm)
 library(Matrix)
-library(energy)
+# library(energy) # TODO: go back to this; temporarily using the source copy to not install library on remote machine
+source("C:\\Users\\boucheka\\Documents\\Boucher_Thesis\\Simulations_Code\\OtherPeoplesCode\\energy.R")
+
 
 CLS <- function(y, X, tau) {
   if(missing(tau)) { tau <- tau_weights() }
@@ -37,5 +39,9 @@ distance_corr <- function(y,X) {
 #   dcs <- DCOR(y=y, x=X)
   dcs <- DCOR(y=y, x=X, index=dcorr_index)
   dist_corr <- dcs$dCov / sqrt( dcs$dVarX * dcs$dVarY)
+}
+
+weighted_kendall_tau <- function(beta.hat, beta) {
+  
 }
 

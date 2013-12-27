@@ -17,22 +17,28 @@ library(Matrix)
 
 initialize_values <- function(n, m, p, t=FALSE, s, dcorr_index, seed=20131105) {
   set.seed(seed)
-  default_n <- 60
-  default_m <- 500
-  default_p <- 1000
-  default_s <- 1
-  default_dcorr_index <- 0.5
+  defaults <- list(n=60, m=500, p=1000, s=1, dcorr_index=1)
+#   default_n <- 60
+#   default_m <- 500
+#   default_p <- 1000
+#   default_s <- 1
+#   default_dcorr_index <- 1
   
   if(t) {
-    default_n <- 6
-    default_m <- 50
-    default_p <- 100
+    defaults <- list(n=6, m=50, p=100, s=defaults$s, dcorr_index=defaults$dcorr_index)
+#     default_n <- 6
+#     default_m <- 50
+#     default_p <- 100
   }
   
-  if(missing(n)) { n <- default_n }
-  if(missing(m)) { m <- default_m }
-  if(missing(p)) { p <- default_p }
-  if(missing(dcorr_index)) { dcorr_index <- default_dcorr_index }
+  if(missing(n)) { n <- defaults$n }
+  if(missing(m)) { m <- defaults$m }
+  if(missing(p)) { p <- defaults$p }
+  if(missing(dcorr_index)) { dcorr_index <- defaults$dcorr_index }
+#   if(missing(n)) { n <- default_n }
+#   if(missing(m)) { m <- default_m }
+#   if(missing(p)) { p <- default_p }
+#   if(missing(dcorr_index)) { dcorr_index <- default_dcorr_index }
   
   n <<- n # number of y_i's/observations
   m <<- m # number of replicate data sets
@@ -50,6 +56,10 @@ initialize_values <- function(n, m, p, t=FALSE, s, dcorr_index, seed=20131105) {
   beta0 <<- rep(NA, n)
   beta0hat <<- rep(NA, n)
   X <<- matrix(NA, nrow=n, ncol=p)
+  
+  generate_cases()
+  
+  
 }
 
 generate_cases <- function() {
@@ -129,7 +139,11 @@ maxes_meds <- function(maxes_plots=T,meds_plots=T) {
   maxes.pearson <<- apply(abs(corr.pearson), 2, max)
   meds.dist <<- apply(abs(corr.dist), 2, median)
   meds.pearson <<- apply(abs(corr.pearson), 2, median)
-  if(T){ maxes_med_plots()} # TODO: fix the condition
+#   if(maxes_plots || meds_plots){ 
+  # TODO: fix the condition or the maxes_meds_plots function to make 
+  # maxes plots and medians plots actually separated options
+  maxes_med_plots()
+#     }
 }
 
 maxes_med_plots <- function() {
@@ -159,76 +173,45 @@ maxes_med_plots <- function() {
   range_extend <- range_padding * range_diff
   range <- c(max(0, range_lower - range_extend), min(1, range_upper + range_extend))
   
-#   plot(density(maxes.dist), main=graph_title, col=plot_colors["Distance Maxes"], xlim=range)
-# #   lines(density(maxes.dist), col=plot_colors["Distance Maxes"])
-#   lines(density(maxes.pearson), col=plot_colors["Pearson Maxes"])
-#   lines(density(meds.dist), col=plot_colors["Distance Medians"])
-#   lines(density(meds.pearson), col=plot_colors["Pearson Medians"])
-#   legend('bottomleft', legend=plots, lty=1, col=plot_colors, bty='n', cex=0.75)
-  
-  # TODO: make this whole section not suck
-  maxes_graph_title = paste("Maximum Pearson Correlations and 
-    Distance Correlations (index=", dcorr_index, ")")
-  meds_graph_title = paste("Median Pearson Correlations and 
-    Distance Correlations (index=", dcorr_index, ")")
-  maxes_plots <- c(plots[1], plots[3])
-  meds_plots <- c(plots[2], plots[4])
-  maxes_range_lower <- min(c(min(maxes.pearson), min(maxes.dist)))
-  maxes_range_upper <- max(c(max(maxes.pearson), max(maxes.dist)))
-  maxes_range_diff <- maxes_range_upper - maxes_range_lower
-  maxes_range_extend <- range_padding * maxes_range_diff
-  meds_range_lower <- min(c(min(meds.pearson), min(meds.dist)))
-  meds_range_upper <- max(c(max(meds.pearson), max(meds.dist)))
-  meds_range_diff <- meds_range_upper - meds_range_lower
-  meds_range_extend <- range_padding * meds_range_diff
-  maxes_range <- c(max(0, maxes_range_lower - maxes_range_extend), min(1, maxes_range_upper + maxes_range_extend))
-  meds_range <- c(max(0, meds_range_lower - meds_range_extend), min(1, meds_range_upper + meds_range_extend))
-  
-#   maxes_range <- c(0.5,1)
-#   meds_range <- c(0.2,1)
-  maxes_range <- c(0,1)
-  meds_range <- c(0,1)
-  
-  par(mfrow=c(1,2))
-  plot(density(maxes.dist), main=maxes_graph_title, col=plot_colors["Distance Maxes"], xlim=maxes_range)
+  plot(density(maxes.dist), main=graph_title, col=plot_colors["Distance Maxes"], xlim=range)
+#   lines(density(maxes.dist), col=plot_colors["Distance Maxes"])
   lines(density(maxes.pearson), col=plot_colors["Pearson Maxes"])
-  legend('bottomleft', legend=maxes_plots, lty=1, col=c(plot_colors[maxes_plots[1]], plot_colors[maxes_plots[2]]),
-         bty='n', cex=0.75) # TODO: these legends are scaling and aligning weird
-  
-  plot(density(meds.dist), main=meds_graph_title, col=plot_colors["Distance Medians"], xlim=meds_range)
+  lines(density(meds.dist), col=plot_colors["Distance Medians"])
   lines(density(meds.pearson), col=plot_colors["Pearson Medians"])
-  legend('bottomleft', legend=meds_plots, lty=1, col=c(plot_colors[meds_plots[1]], plot_colors[meds_plots[2]]),
-         bty='n', cex=0.75)
+  legend('bottomleft', legend=plots, lty=1, col=plot_colors, bty='n', cex=0.75)
   
+#   # TODO: make this whole section not suck
+#   maxes_graph_title = paste("Maximum Pearson Correlations and 
+#     Distance Correlations (index=", dcorr_index, ")")
+#   meds_graph_title = paste("Median Pearson Correlations and 
+#     Distance Correlations (index=", dcorr_index, ")")
+#   maxes_plots <- c(plots[1], plots[3])
+#   meds_plots <- c(plots[2], plots[4])
+#   maxes_range_lower <- min(c(min(maxes.pearson), min(maxes.dist)))
+#   maxes_range_upper <- max(c(max(maxes.pearson), max(maxes.dist)))
+#   maxes_range_diff <- maxes_range_upper - maxes_range_lower
+#   maxes_range_extend <- range_padding * maxes_range_diff
+#   meds_range_lower <- min(c(min(meds.pearson), min(meds.dist)))
+#   meds_range_upper <- max(c(max(meds.pearson), max(meds.dist)))
+#   meds_range_diff <- meds_range_upper - meds_range_lower
+#   meds_range_extend <- range_padding * meds_range_diff
+#   maxes_range <- c(max(0, maxes_range_lower - maxes_range_extend), min(1, maxes_range_upper + maxes_range_extend))
+#   meds_range <- c(max(0, meds_range_lower - meds_range_extend), min(1, meds_range_upper + meds_range_extend))
+#   
+# #   maxes_range <- c(0.5,1)
+# #   meds_range <- c(0.2,1)
+#   maxes_range <- c(0,1)
+#   meds_range <- c(0,1)
+#   
+#   par(mfrow=c(1,2))
+#   plot(density(maxes.dist), main=maxes_graph_title, col=plot_colors["Distance Maxes"], xlim=maxes_range)
+#   lines(density(maxes.pearson), col=plot_colors["Pearson Maxes"])
+#   legend('bottomleft', legend=maxes_plots, lty=1, col=c(plot_colors[maxes_plots[1]], plot_colors[maxes_plots[2]]),
+#          bty='n', cex=0.75) # TODO: these legends are scaling and aligning weird
+#   
+#   plot(density(meds.dist), main=meds_graph_title, col=plot_colors["Distance Medians"], xlim=meds_range)
+#   lines(density(meds.pearson), col=plot_colors["Pearson Medians"])
+#   legend('bottomleft', legend=meds_plots, lty=1, col=c(plot_colors[meds_plots[1]], plot_colors[meds_plots[2]]),
+#          bty='n', cex=0.75)
 }
-
-# maxes_meds_plots <- function() {
-# #   par(mfcol=c(2,2))
-#   meds_plots(corr=corr.dist, corr_type="Distance Corr")
-# #   par(new=T)
-#   meds_plots(corr=corr.pearson, corr_type="Pearson Corr")
-# #   maxes_plots(corr=corr.dist, corr_type="Distance Corr")
-# #   maxes_plots(corr=corr.pearson, corr_type="Pearson Corr")
-# }
-# 
-# maxes_plots <- function(corr, corr_type) {
-#   maxes <<- apply(abs(corr), 2, max)
-#   if(!missing(corr_type)) {
-#     graph_title = paste("Maxes of ", corr_type)
-#     plot(density(maxes), main=graph_title)
-#   } else {
-#     plot(density(maxes))
-#   }
-# }
-# 
-# meds_plots <- function(corr, corr_type) {
-#   meds <<- apply(abs(corr), 2, median)
-#   if(!missing(corr_type)) {
-#     graph_title = paste("Medians of ", corr_type)
-#     plot(density(meds), main=graph_title)
-#   } else {
-#     plot(density(meds))
-#   }
-# }
-
 
