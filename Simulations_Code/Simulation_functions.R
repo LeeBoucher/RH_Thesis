@@ -27,8 +27,7 @@ CLS <- function(y, X, tau) {
 
 tau_weights <- function(w) {
   if(missing(w)) {
-    tau <- 0.5;
-    # case where all weights equal to 1 - least squares is when tau=1
+    tau <- 0.5; # case where all weights equal to 1 - least squares is when tau=1
   }
   
 }

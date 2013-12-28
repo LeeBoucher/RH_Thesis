@@ -63,34 +63,38 @@ initialize_values <- function(n, m, p, t=FALSE, s, dcorr_index, seed=20131105) {
 }
 
 generate_cases <- function() {
-  cases <<- 1
-#   b1 <- matrix(NA, nrow=p, ncol=cases)
-#   b0 <- matrix(NA, nrow=n, ncol=cases)
-# #   vc <- rep(NA, cases)
-#   R.squared <- rep(NA,cases)
-# 
-#   
-#   b1[,1] <- rep(0,p)
-#   
-#   b0[,1] <- rep(1,n)
-#   
-# #   vc[[1]] <- varcov.generate(p=p)
-#   R.squared[[1]] <- 0.6
-#   
-#   Cases <<- list(b1, b0, R.squared)
-# #   names(cases) <- ("b1", "b0", "vc", "R.squared")
+  
+  x_col_order <- c(1:p)
+  xforms <- rep(1,p)
+  
+  b0 <- rep(0,n)
+  b1 <- rep(0,p)
+  vc <- varcov.generate(p=p)
+#   rs <<- 0.6
+  
+  case <- list(beta1=b1, beta0=b0, varcov=vc, x_col_order=x_col_order, xforms=xforms)
+  
+  num_cases <<- 1
+  cases <<- list(case)
 }
 
-get_case <- function(case) {
-  beta0 <<- rep(0,n)
-  beta1 <<- rep(0,p)
-  varcov <<- varcov.generate(p=p)
-#   varcov <<- diag(p)
-  rs <<- 0.6
+get_case <- function(case, beta1_, beta0_, varcov_, x_col_order_, xforms_) {
+  case <- cases[[case]]
+  beta0 <<- case$beta0
+  beta1 <<- case$beta1
+  varcov <<- case$varcov
+  
+  if( !missing(beta1_) && !is.null(beta1_)) { beta1 <<- beta1 }
+  if( !missing(beta0_) && !is.null(beta0_)) { beta0 <<- beta0 }
+  if( !missing(varcov_) && !is.null(varcov_)) { varcov <<- varcov }
+  if( !missing(x_col_order_) && !is.null(x_col_order_)) { x_col_order <<- x_col_order }
+  if( !missing(xforms_) && !is.null(xforms_)) { xforms <<- xforms }
+  
+#   return(list(beta1=beta1, beta0=beta0, varcov=varcov, x_col_order=x_col_order, xforms=xforms))
 }
 
-# generate_data <- function(varcov, rs) {
-generate_data <- function() {
+generate_data <- function(case_, beta1_=NULL, beta0_=NULL, varcov_=NULL, x_col_order_=NULL, xforms_=NULL) {
+# generate_data <- function() {
 # #   beta1 <<- rep(0,p)
 # #   beta0 <<- rep(0,n)
 # #   e <<- c(data=rnorm(n, mean=0, sd=1))
@@ -106,7 +110,10 @@ generate_data <- function() {
 # #   beta0 <<- rep(0,p)
 #   y <<- e + X %*% beta1 + beta0 # just noise
   
+  get_case(case=case_, beta1=beta1_, beta0=beta0_, varcov=varcov_, x_col_order=x_col_order_, xforms=xforms_)
+  
 #   X <<- rmvnorm(n, mu=rep(0,p), Sigma=varcov)
+  
   X <<- matrix(data=rnorm(n*p, mean=0, sd=1), nrow=n, ncol=p)
   
   if(t(beta1) %*% beta1 == 0) {

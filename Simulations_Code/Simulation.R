@@ -20,10 +20,9 @@ run_time <- Sys.time()
 
 initialize_values(t=TRUE)
 
-for(c in 1:cases) {
-  get_case(case=c)
+for(c in 1:num_cases) {
   for(j in 1:m) {
-    generate_data()
+    generate_data(case=c)
     beta1hat <- CLS(y=y, X=X)
     corr.pearson[,j] <- abs(cor(y,X))
     for(k in 1:p) {
