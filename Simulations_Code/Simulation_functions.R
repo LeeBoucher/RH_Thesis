@@ -13,8 +13,7 @@
 # library(mvtnorm)
 library(Matrix)
 # library(energy) # TODO: go back to this; temporarily using the source copy to not install library on remote machine
-source("C:\\Users\\boucheka\\Documents\\Boucher_Thesis\\Simulations_Code\\OtherPeoplesCode\\energy.R")
-
+source(paste(directory_path, "OtherPeoplesCode\\energy.R", sep=""))
 
 CLS <- function(y, X, tau) {
   if(missing(tau)) { tau <- tau_weights() }

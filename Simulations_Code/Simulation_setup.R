@@ -18,27 +18,15 @@ library(Matrix)
 initialize_values <- function(n, m, p, t=FALSE, s, dcorr_index, seed=20131105) {
   set.seed(seed)
   defaults <- list(n=60, m=500, p=1000, s=1, dcorr_index=1)
-#   default_n <- 60
-#   default_m <- 500
-#   default_p <- 1000
-#   default_s <- 1
-#   default_dcorr_index <- 1
   
   if(t) {
     defaults <- list(n=6, m=50, p=100, s=defaults$s, dcorr_index=defaults$dcorr_index)
-#     default_n <- 6
-#     default_m <- 50
-#     default_p <- 100
   }
   
   if(missing(n)) { n <- defaults$n }
   if(missing(m)) { m <- defaults$m }
   if(missing(p)) { p <- defaults$p }
   if(missing(dcorr_index)) { dcorr_index <- defaults$dcorr_index }
-#   if(missing(n)) { n <- default_n }
-#   if(missing(m)) { m <- default_m }
-#   if(missing(p)) { p <- default_p }
-#   if(missing(dcorr_index)) { dcorr_index <- default_dcorr_index }
   
   n <<- n # number of y_i's/observations
   m <<- m # number of replicate data sets
@@ -63,26 +51,63 @@ initialize_values <- function(n, m, p, t=FALSE, s, dcorr_index, seed=20131105) {
 }
 
 generate_cases <- function() {
+  cases <- list()
   
-  x_col_order <- c(1:p)
-  xforms <- rep(1,p)
+  block_cases <- list()
+  block_cases[["all_independent"]] <- c(0,p)
+  block_cases[["equicorrelated_0.3"]] <- c(0.3, p)
+  block_cases[["equicorrelated_0.6"]] <- c(0.6, p)
+  block_cases[["equicorrelated_0.9"]] <- c(0.9, p)
+#   block_cases[["block_equicorrelated_p/5_0.6_0.3"]] <- list(c(0.3, 0.8*p), c(0.6, 0.2*p))
   
-  b0 <- rep(0,n)
-  b1 <- rep(0,p)
-  vc <- varcov.generate(p=p)
-#   rs <<- 0.6
+  beta1_cases <- list()
+  beta1_cases[["no_signal"]] <- rep(0,p)
+  beta1_cases[["single_signal"]] <- c(1, rep(0, p-1))
+  beta1_cases[["10_signals_strength_same"]] <- c(rep(1,10), rep(0,p-10))
+  beta1_cases[["10_signals_strength_int_powers_of_2"]] <- c(sapply(c(4:-5), function(x) 2^x), rep(0, p-10))
   
-  case <- list(beta1=b1, beta0=b0, varcov=vc, x_col_order=x_col_order, xforms=xforms)
+  for(block_case in block_cases) {
+    vc <- varcov.generate(p=p, blocks=block_case)
+    b0 <- list()
+    b1 <- list()
+    x_col_order <- c(1:p)
+    xforms <- rep(1,p)
+    
+    num_cases <- 0
+    
+    for (beta1_case in beta1_cases) {
+      x_col_order <- c(1:p)
+      xforms <- rep(1,p)
+      
+      beta0 <- rep(0,n)
+      beta1 <- rep(0,p)
+      
+      b0[[length(b0) + 1]] <- beta0
+      b1[[length(b1) + 1]] <- beta1
+      
+      num_cases <- num_cases + 1
+      
+    }
+    # TODO: also pass string description?
+    case <- list(beta1=b1, beta0=b0, varcov=vc, x_col_order=x_col_order, xforms=xforms)
+    cases[[length(cases) + 1]] <- case
+  }
   
-  num_cases <<- 1
-  cases <<- list(case)
+  num_cases <<- num_cases
+#   num_cases <<- length(cases)
+  cases <<- cases
 }
 
-get_case <- function(case, beta1_, beta0_, varcov_, x_col_order_, xforms_) {
+get_case <- function(case, index, beta1_, beta0_, varcov_, x_col_order_, xforms_) {
+# get_case <- function(case, beta1_, beta0_, varcov_, x_col_order_, xforms_) {
   case <- cases[[case]]
-  beta0 <<- case$beta0
-  beta1 <<- case$beta1
+#   beta0 <<- case[["beta0"]][[index]]
+#   beta1 <<- case[["beta1"]][[index]]
   varcov <<- case$varcov
+  b0 <<- case$beta0
+  b1 <<- case$beta1
+  beta0 <<- b0[[index]]
+  beta1 <<- b1[[index]]
   
   if( !missing(beta1_) && !is.null(beta1_)) { beta1 <<- beta1 }
   if( !missing(beta0_) && !is.null(beta0_)) { beta0 <<- beta0 }
@@ -90,10 +115,20 @@ get_case <- function(case, beta1_, beta0_, varcov_, x_col_order_, xforms_) {
   if( !missing(x_col_order_) && !is.null(x_col_order_)) { x_col_order <<- x_col_order }
   if( !missing(xforms_) && !is.null(xforms_)) { xforms <<- xforms }
   
-#   return(list(beta1=beta1, beta0=beta0, varcov=varcov, x_col_order=x_col_order, xforms=xforms))
+#   case <- cases[[case]]
+#   beta0 <<- case$beta0
+#   beta1 <<- case$beta1
+#   varcov <<- case$varcov
+#   
+#   if( !missing(beta1_) && !is.null(beta1_)) { beta1 <<- beta1 }
+#   if( !missing(beta0_) && !is.null(beta0_)) { beta0 <<- beta0 }
+#   if( !missing(varcov_) && !is.null(varcov_)) { varcov <<- varcov }
+#   if( !missing(x_col_order_) && !is.null(x_col_order_)) { x_col_order <<- x_col_order }
+#   if( !missing(xforms_) && !is.null(xforms_)) { xforms <<- xforms }
 }
 
-generate_data <- function(case_, beta1_=NULL, beta0_=NULL, varcov_=NULL, x_col_order_=NULL, xforms_=NULL) {
+generate_data <- function(case, index, beta1_=NULL, beta0_=NULL, varcov_=NULL, x_col_order_=NULL, xforms_=NULL) {
+# generate_data <- function(case_, beta1_=NULL, beta0_=NULL, varcov_=NULL, x_col_order_=NULL, xforms_=NULL) {
 # generate_data <- function() {
 # #   beta1 <<- rep(0,p)
 # #   beta0 <<- rep(0,n)
@@ -110,11 +145,35 @@ generate_data <- function(case_, beta1_=NULL, beta0_=NULL, varcov_=NULL, x_col_o
 # #   beta0 <<- rep(0,p)
 #   y <<- e + X %*% beta1 + beta0 # just noise
   
-  get_case(case=case_, beta1=beta1_, beta0=beta0_, varcov=varcov_, x_col_order=x_col_order_, xforms=xforms_)
+  varcov <<- cases[[case]]$varcov
   
-#   X <<- rmvnorm(n, mu=rep(0,p), Sigma=varcov)
+#   prev_varcov <- varcov
+#   
+#   get_case(case=case, index=index, beta1=beta1_, beta0=beta0_, varcov=varcov_, x_col_order=x_col_order_, xforms=xforms_)
   
-  X <<- matrix(data=rnorm(n*p, mean=0, sd=1), nrow=n, ncol=p)
+  raw_X <<- rmvnorm(n, mu=rep(0,p), Sigma=varcov)
+  
+  X <<- raw_X
+  
+#   X <<- matrix(data=rnorm(n*p, mean=0, sd=1), nrow=n, ncol=p)
+  
+#   if(t(beta1) %*% beta1 == 0) {
+#     e.sd <<- 1
+#   } else {
+#     ss <- ((1-rs^2)*t(beta1) %*% varcov %*% beta1)/(rs^2)
+#     v <- var(X %*% beta1)
+#     e.sd <<- v/(v + ss)
+#   }
+#   e <<- c(data=rnorm(n, mean=0, sd=e.sd))
+  
+#   y <<- e + X %*% beta1 + beta0
+#   generate_y(X, beta1, beta0, e)
+  
+}
+
+generate_y <- function(X, case, index, beta1_=NULL, beta0_=NULL, x_col_order_=NULL, xforms_=NULL) {
+# generate_y <- function(X, beta1, beta0, e) {
+  get_case(case=case, index=index, beta1_=beta1_, beta0_=beta0_, varcov=NULL, x_col_order_=x_col_order_, xforms_=xforms_)
   
   if(t(beta1) %*% beta1 == 0) {
     e.sd <<- 1
@@ -126,19 +185,23 @@ generate_data <- function(case_, beta1_=NULL, beta0_=NULL, varcov_=NULL, x_col_o
   e <<- c(data=rnorm(n, mean=0, sd=e.sd))
   
   y <<- e + X %*% beta1 + beta0
-  
 }
 
+# varcov.generate <- function(p=p, blocks, default_c) {
 varcov.generate <- function(p, blocks, default_c) {
   if(missing(default_c)) { default_c <- 0.6 }
   if(missing(blocks)) { blocks = c(default_c, p) }
+  
   c <- matrix(data=c(blocks), ncol=2, byrow=T) # correlation of predictors in and size of each block
+  
   if(sum(c[,2]) < p) {
     b_default <-c(default_c, p - sum(c[,2]))
     blocks <- c(blocks, b_default)
     c <- matrix(data=blocks, ncol=2, byrow=T)
   }
+  
   varcov <- matrix(bdiag(apply(c, 1, function(x) {matrix(data=rep(x[1],x[2]**2), nrow=x[2]) + diag(rep(1-x[1], x[2]))})), nrow=p)
+
 }
 
 maxes_meds <- function(maxes_plots=T,meds_plots=T) {
