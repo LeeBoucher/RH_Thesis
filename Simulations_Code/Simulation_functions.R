@@ -19,7 +19,8 @@ CLS <- function(y, X, tau) {
   if(missing(tau)) { tau <- tau_weights() }
   X <- scale(X)
   y <- scale(y)
-  beta.hat <- solve(tau * t(X) %*% X + (1-tau)*diag(diag(t(X) %*% X))) %*% t(X) %*% y
+  obj_matrix <- tau * t(X) %*% X + (1-tau)*diag(diag(t(X) %*% X))
+  beta.hat <- solve(obj_matrix) %*% t(X) %*% y
   # cheaper inverse computation for non-small cases using singular value decomposition as in lm.ridge
   # maybe also possibility to use QR; not as good because easier to update matrix of which inverse is being taken
 }

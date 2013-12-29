@@ -17,27 +17,24 @@ source(paste(directory_path, "Simulation_functions.R", sep=""))
 source(paste(directory_path, "Simulation_setup.R", sep=""))
 source(paste(directory_path, "OtherPeoplesCode\\RandomNormal.R", sep=""))
 
-initialize_values(t=TRUE)
+initialize_values(m=3)
+# initialize_values(n=6, m=5, p=100)
+# initialize_values(t=TRUE)
 
 run_time <- Sys.time()
 
-for(c in 1:length(cases)) { # TODO: make it so that cases don't overwrite each other on anything we want to keep
+for(c in 1:num_cases) { # TODO: make it so that cases don't overwrite each other on anything we want to keep
   for(j in 1:m) {
     generate_data(case=c)
-    for(index in 1:4) {
-      generate_y(X=X, case=c, index=index)
-      beta1hat <- CLS(y=y, X=X)
-      corr.pearson[,j] <- abs(cor(y,X))
-      for(k in 1:p) {
-        corr.dist[k,j] <- distance_corr(y,X[,k])
-      }
+    beta1hat <- CLS(y=y, X=X)
+    corr.pearson[,j] <- abs(cor(y,X))
+    for(k in 1:p) {
+      corr.dist[k,j] <- distance_corr(y,X[,k])
     }
   }
   
-#   maxes_meds()
+  maxes_meds()
 }
-
-# maxes_meds()
 
 run_time <- Sys.time() - run_time
 print(run_time)
