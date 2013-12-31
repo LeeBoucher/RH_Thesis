@@ -12,6 +12,7 @@
 
 # library(mvtnorm)
 library(Matrix)
+library(MASS)
 # library(energy) # TODO: go back to this; temporarily using the source copy to not install library on remote machine
 source(paste(directory_path, "OtherPeoplesCode\\energy.R", sep=""))
 
@@ -20,7 +21,9 @@ CLS <- function(y, X, tau) {
   X <- scale(X)
   y <- scale(y)
   obj_matrix <- tau * t(X) %*% X + (1-tau)*diag(diag(t(X) %*% X))
-  beta.hat <- solve(obj_matrix) %*% t(X) %*% y
+#   inv_obj_matrix <- solve(obj_matrix)
+  inv_obj_matrix <- chol2inv(chol(obj_matrix))
+  beta.hat <- inv_obj_matrix %*% t(X) %*% y
   # cheaper inverse computation for non-small cases using singular value decomposition as in lm.ridge
   # maybe also possibility to use QR; not as good because easier to update matrix of which inverse is being taken
 }

@@ -18,25 +18,20 @@ library(Matrix)
 initialize_values <- function(n, m, p, t=FALSE, s=1, dcorr_index=1, rs=0.3, seed=20131105) {
   set.seed(seed)
   defaults <- list(n=60, m=500, p=1000)
-  
   if(t) {
     defaults <- list(n=6, m=50, p=100)
   }
-  
   if(missing(n)) { n <- defaults$n }
   if(missing(m)) { m <- defaults$m }
   if(missing(p)) { p <- defaults$p }
-  
   n <<- n # number of y_i's/observations
   m <<- m # number of replicate data sets
   p <<- p # number of predictors
   dcorr_index <<- dcorr_index # index for distance correlation
   rs <<- rs
-  
   corr.pearson <<- matrix(data=NA, nrow=p, ncol=m)
   corr.dist <<- matrix(data=NA, nrow=p, ncol=m)
   varcov <<- matrix(data=NA, nrow=p, ncol=p)
-  
   y <<- rep(NA, n)
   e <<- rep(NA, n)
   beta1 <<- rep(NA, p)
@@ -67,6 +62,7 @@ generate_cases <- function() {
   beta1_cases[["10_signals_strength_same"]] <- c(rep(1,10), rep(0,p-10))
   beta1_cases[["10_signals_strength_int_powers_of_2"]] <- c(sapply(c(4:-5), function(x) 2^x), rep(0, p-10))
   
+  b0 <- rep(0,n)
   for(block_case in block_cases) {
     vc <- varcov.generate(p=p, blocks=block_case)
 #     b0 <- list()
@@ -85,11 +81,6 @@ generate_cases <- function() {
       
       x_col_order <- c(1:p)
       xforms <- rep(1,p)
-      
-      b0 <- rep(0,n)
-      
-#       b0[[length(b0) + 1]] <- beta0
-#       b1[[length(b1) + 1]] <- beta1
       
       # TODO: also pass string description?
       case <- list(beta1=b1, beta0=b0, varcov=vc, recalc=recalc, x_col_order=x_col_order, xforms=xforms)
