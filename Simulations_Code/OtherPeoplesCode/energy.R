@@ -1,7 +1,8 @@
 ################################################################################
 # Program: energy.R
-# Project: Distance correlation function from energy library
-# Description: Conduct a preliminary simulation study for CLS ordering vs SIS
+# Project: Boucher Senior Thesis
+# Description: Distance correlation function from energy library available at 
+#              http://cran.r-project.org/web/packages/energy/index.html
 #
 # Author: Source taken entirely (not modified except abridged) from 
 #         energy library (on CRAN) by Maria L. Rizzo and Gabor J. Szekely
