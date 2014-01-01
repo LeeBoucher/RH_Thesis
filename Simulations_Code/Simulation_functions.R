@@ -26,6 +26,7 @@ CLS <- function(y, X, tau) {
   beta.hat <- inv_obj_matrix %*% t(X) %*% y
   # cheaper inverse computation for non-small cases using singular value decomposition as in lm.ridge
   # maybe also possibility to use QR; not as good because easier to update matrix of which inverse is being taken
+  return(beta.hat)
 }
 
 tau_weights <- function(w) {

@@ -17,32 +17,37 @@ library(Matrix)
 
 initialize_values <- function(n, m, p, t=FALSE, s=1, dcorr_index=1, rs=0.3, seed=20131105) {
   set.seed(seed)
+  
   defaults <- list(n=60, m=500, p=1000)
   if(t) {
     defaults <- list(n=6, m=50, p=100)
   }
+  
   if(missing(n)) { n <- defaults$n }
   if(missing(m)) { m <- defaults$m }
   if(missing(p)) { p <- defaults$p }
+  
   n <<- n # number of y_i's/observations
   m <<- m # number of replicate data sets
   p <<- p # number of predictors
   dcorr_index <<- dcorr_index # index for distance correlation
   rs <<- rs
-  corr.pearson <<- matrix(data=NA, nrow=p, ncol=m)
-  corr.dist <<- matrix(data=NA, nrow=p, ncol=m)
-  varcov <<- matrix(data=NA, nrow=p, ncol=p)
-  y <<- rep(NA, n)
-  e <<- rep(NA, n)
-  beta1 <<- rep(NA, p)
-  beta1hat <<- rep(NA, p)
-  beta0 <<- rep(NA, n)
-  beta0hat <<- rep(NA, n)
-  X <<- matrix(NA, nrow=n, ncol=p)
-  raw_X <<- matrix(NA, nrow=n, ncol=p)
   
-  generate_cases()
+  cases <<- generate_cases()
   
+#   corr.pearson <<- matrix(data=NA, nrow=p, ncol=m)
+#   corr.dist <<- matrix(data=NA, nrow=p, ncol=m)
+#   varcov <<- matrix(data=NA, nrow=p, ncol=p)
+#   y <<- rep(NA, n)
+#   e <<- rep(NA, n)
+#   beta1 <<- rep(NA, p)
+#   beta1hat <<- rep(NA, p)
+#   beta0 <<- rep(NA, n)
+#   beta0hat <<- rep(NA, n)
+#   X <<- matrix(NA, nrow=n, ncol=p)
+#   raw_X <<- matrix(NA, nrow=n, ncol=p)
+  
+#   data_by_case_run <<- list()
   
 }
 
@@ -83,33 +88,40 @@ generate_cases <- function() {
       xforms <- rep(1,p)
       
       # TODO: also pass string description?
-      case <- list(beta1=b1, beta0=b0, varcov=vc, recalc=recalc, x_col_order=x_col_order, xforms=xforms)
+      case <- list(beta1=b1, beta0=b0, varcov=vc, x_col_order=x_col_order, xforms=xforms, recalc=recalc)
       cases[[length(cases) + 1]] <- case
     }
   }
-  num_cases <<- length(cases)
-  cases <<- cases
+  return(cases)
 }
 
-get_case <- function(case, beta1_, beta0_, varcov_, x_col_order_, xforms_) {  
+get_case <- function(case) { 
+# get_case <- function(case, beta1_, beta0_, varcov_, x_col_order_, xforms_) {  
   case <- cases[[case]]
   recalc <- case$recalc
-  if(recalc) { varcov <<- case$varcov }
-  beta0 <<- case$beta0
-  beta1 <<- case$beta1
-  x_col_order <<- case$x_col_order
-  xforms <<- case$xforms
+  varcov <- case$varcov
+  beta0 <- case$beta0
+  beta1 <- case$beta1
+  x_col_order <- case$x_col_order
+  xforms <- case$xforms
   
-  if( !missing(beta1_) && !is.null(beta1_)) { beta1 <<- beta1 }
-  if( !missing(beta0_) && !is.null(beta0_)) { beta0 <<- beta0 }
-  if( !missing(varcov_) && !is.null(varcov_)) { varcov <<- varcov }
-  if( !missing(x_col_order_) && !is.null(x_col_order_)) { x_col_order <<- x_col_order }
-  if( !missing(xforms_) && !is.null(xforms_)) { xforms <<- xforms }
+#   if( !missing(beta1_) && !is.null(beta1_)) { beta1 <- beta1 }
+#   if( !missing(beta0_) && !is.null(beta0_)) { beta0 <- beta0 }
+#   if( !missing(varcov_) && !is.null(varcov_)) { varcov <- varcov }
+#   if( !missing(x_col_order_) && !is.null(x_col_order_)) { x_col_order <- x_col_order }
+#   if( !missing(xforms_) && !is.null(xforms_)) { xforms <- xforms }
   
-  return(recalc)
+  return(list(beta1=beta1, beta0=beta0, varcov=varcov, x_col_order=x_col_order, xforms=xforms, recalc=recalc))
+}
+
+generate_raw_X_data <- function(varcov) {
+  # optimize for recalc only when necessary
+  X <- rmvnorm(n, mu=rep(0,p), Sigma=varcov)
 }
 
 generate_data <- function(case, index, beta1_=NULL, beta0_=NULL, varcov_=NULL, x_col_order_=NULL, xforms_=NULL) {
+# This is all too stupidly general and unneccessary; however, without it, the 
+# function just calls rmvnorm. Make this function for special cases later IFF necessary.
 # generate_data <- function(case_, beta1_=NULL, beta0_=NULL, varcov_=NULL, x_col_order_=NULL, xforms_=NULL) {
 # generate_data <- function() {
 # #   beta1 <<- rep(0,p)
@@ -127,13 +139,17 @@ generate_data <- function(case, index, beta1_=NULL, beta0_=NULL, varcov_=NULL, x
 # #   beta0 <<- rep(0,p)
 #   y <<- e + X %*% beta1 + beta0 # just noise
   
-  if(get_case(case=case, beta1=beta1_, beta0=beta0_, varcov=varcov_, x_col_order=x_col_order_, xforms=xforms_)) {
-    raw_X <<- rmvnorm(n, mu=rep(0,p), Sigma=varcov)
-  }
+#   if(get_case(case=case, beta1=beta1_, beta0=beta0_, varcov=varcov_, x_col_order=x_col_order_, xforms=xforms_)) {
+#     raw_X <<- rmvnorm(n, mu=rep(0,p), Sigma=varcov)
+#   }
   
-#   raw_X <<- rmvnorm(n, mu=rep(0,p), Sigma=varcov)
+  case <- get_case(case=case, beta1=beta1_, beta0=beta0_, varcov=varcov_, x_col_order=x_col_order_, xforms=xforms_)
   
-  X <<- raw_X
+#   if(get_case$recalc) {
+#     raw_X <- rmvnorm(n, mu=rep(0,p), Sigma=varcov)
+#   }
+#   
+#   X <- raw_X
   
 #   X <<- matrix(data=rnorm(n*p, mean=0, sd=1), nrow=n, ncol=p)
   
@@ -149,25 +165,28 @@ generate_data <- function(case, index, beta1_=NULL, beta0_=NULL, varcov_=NULL, x
 #   y <<- e + X %*% beta1 + beta0
 #   generate_y(X, beta1, beta0, e)
   
-  generate_y(X=X, case=case)
+#   generate_y(X=X, case=case)
   
 }
 
-generate_y <- function(X, case, rs_, beta1_=NULL, beta0_=NULL, x_col_order_=NULL, xforms_=NULL) {
+generate_y <- function(X, varcov, beta1=NULL, beta0=NULL, x_col_order=NULL, xforms=NULL, rs_) {
+# generate_y <- function(X, case, rs_, beta1_=NULL, beta0_=NULL, x_col_order_=NULL, xforms_=NULL) {
 # generate_y <- function(X, beta1, beta0, e) {
-  get_case(case=case, beta1_=beta1_, beta0_=beta0_, varcov=NULL, x_col_order_=x_col_order_, xforms_=xforms_)
+#   get_case(case=case, beta1_=beta1_, beta0_=beta0_, varcov=NULL, x_col_order_=x_col_order_, xforms_=xforms_)
   if(missing(rs_)) { rs_ <- rs}
   
-  if(t(beta1) %*% beta1 == 0) {
-    e.sd <<- 1
+  if(sqrt(sum(beta1^2)) == 0) {
+    e.sd <- 1
   } else {
     ss <- ((1-rs_^2)*t(beta1) %*% varcov %*% beta1)/(rs_^2)
     v <- var(X %*% beta1)
-    e.sd <<- v/(v + ss)
+    e.sd <- v/(v + ss)
   }
-  e <<- c(data=rnorm(n, mean=0, sd=e.sd))
+  e <- c(data=rnorm(n, mean=0, sd=e.sd))
   
-  y <<- e + X %*% beta1 + beta0
+  y <- e + X %*% beta1 + beta0
+  
+  return(list(y=y, e=e))
 }
 
 varcov.generate <- function(p, blocks, default_c) {
@@ -183,7 +202,25 @@ varcov.generate <- function(p, blocks, default_c) {
   }
   
   varcov <- matrix(bdiag(apply(c, 1, function(x) {matrix(data=rep(x[1],x[2]**2), nrow=x[2]) + diag(rep(1-x[1], x[2]))})), nrow=p)
+}
 
+organize_data_by_case <- function(d) {
+  data_organized_by_case <- list()
+  for(c in 1:length(cases)) {
+    case_params <- list(varcov=NA, x_col_order=NA, xforms=NA, beta1=NA)
+    case_params$varcov <- cases[[c]][["varcov"]]
+    case_params$beta1 <- cases[[c]][["beta1"]]
+    case_params$x_col_order <- cases[[c]][["x_col_order"]]
+    case_params$xforms <- cases[[c]][["xforms"]]
+    results <- list()
+    for(r in 1:m) {
+      name <- paste("beta1hat", r)
+      results[[name]] <- d[[r]][[c]][["beta1hat"]]
+    }
+    case <- list(case_params, results)
+    data_organized_by_case[[length(data_organized_by_case) + 1]] <- case
+  }
+  return(data_organized_by_case)
 }
 
 maxes_meds <- function(maxes_plots=T,meds_plots=T) {
