@@ -16,7 +16,7 @@ library(Matrix)
 
 cluster <- T
 
-if (cluster) { directory_path <- "~/Private/Thesis/Simulations_Code/" 
+if (cluster) { directory_path <- "~/Private/RH_Thesis/Simulations_Code/" 
 } else { directory_path <- "C:\\Users\\boucheka\\Documents\\Boucher_Thesis\\Simulations_Code\\" }
 source(paste(directory_path, "Simulation_functions.R", sep=""))
 source(paste(directory_path, "Simulation_setup.R", sep=""))
