@@ -14,12 +14,13 @@
 library(Matrix)
 library(MASS)
 # library(energy) # TODO: go back to this; temporarily using the source copy to not install library on remote machine
-source(paste(directory_path, "OtherPeoplesCode\\energy.R", sep=""))
+if(cluster) { source(paste(directory_path, "OtherPeoplesCode/energy.R", sep="")) 
+} else { source(paste(directory_path, "OtherPeoplesCode\\energy.R", sep="")) }
 
 CLS <- function(y, X, tau) {
   if(missing(tau)) { tau <- tau_weights() }
-  X <- scale(X)
-  y <- scale(y)
+#   X <- scale(X)
+#   y <- scale(y)
   obj_matrix <- tau * t(X) %*% X + (1-tau)*diag(diag(t(X) %*% X))
 #   inv_obj_matrix <- solve(obj_matrix)
   inv_obj_matrix <- chol2inv(chol(obj_matrix))

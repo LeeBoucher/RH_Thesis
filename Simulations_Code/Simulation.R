@@ -14,30 +14,24 @@ run_time <- Sys.time()
 
 library(Matrix)
 
-directory_path <- "C:\\Users\\boucheka\\Documents\\Boucher_Thesis\\Simulations_Code\\"
+cluster <- T
+
+if (cluster) { directory_path <- "~/Private/Thesis/Simulations_Code/" 
+} else { directory_path <- "C:\\Users\\boucheka\\Documents\\Boucher_Thesis\\Simulations_Code\\" }
 source(paste(directory_path, "Simulation_functions.R", sep=""))
 source(paste(directory_path, "Simulation_setup.R", sep=""))
-source(paste(directory_path, "OtherPeoplesCode\\RandomNormal.R", sep=""))
+if(cluster) { source(paste(directory_path, "OtherPeoplesCode/RandomNormal.R", sep="")) 
+} else { source(paste(directory_path, "OtherPeoplesCode\\RandomNormal.R", sep="")) }
 
-# initialize_values(m=3)
+initialize_values()
+# initialize_values(m=7)
 # initialize_values(t=TRUE, m=3)
 # initialize_values(t=TRUE)
-initialize_values(n=2, m=5, p=10)
+# initialize_values(n=2, m=5, p=10)
 
-run_case <- function(beta1, beta0, varcov, x_col_order, xforms, recalc) { 
-  case <- list(beta1=beta1, beta1hat=NA, varcov=varcov, x_col_order=x_col_order, xforms=xforms)
-  X <- rmvnorm(n, mu=rep(0,p), Sigma=case$varcov) # optimize this to recalc only when necessary
-  y <- generate_y(X=X, varcov=case$varcov, beta1=case$beta1, beta0=beta0)[[1]]
-  case$beta1hat <- CLS(y=y, X=X)
-  case <- list(beta1=case$beta1, beta1hat=case$beta1hat)
-  return(case)
-}
+cases <- generate_cases()
 
-single_iteration_all_cases <- function() { 
-  lapply(cases, function(x) run_case(x$beta1, x$beta0, x$varcov, x$x_col_order, x$xforms)) 
-}
-
-all_data <- lapply(1:m, function(x) single_iteration_all_cases())
+all_data <- iterate_m_times()
 
 all_data_organized_by_case <- organize_data_by_case(all_data)
 
@@ -53,8 +47,6 @@ all_data_organized_by_case <- organize_data_by_case(all_data)
 #     
 #   }
 # }
-
-# maxes_meds()
 
 run_time <- Sys.time() - run_time
 print(run_time)
