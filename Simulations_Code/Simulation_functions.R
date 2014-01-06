@@ -14,8 +14,7 @@
 library(Matrix)
 library(MASS)
 # library(energy) # TODO: go back to this; temporarily using the source copy to not install library on remote machine
-if(cluster) { source(paste(directory_path, "OtherPeoplesCode/energy.R", sep="")) 
-} else { source(paste(directory_path, "OtherPeoplesCode\\energy.R", sep="")) }
+source(paste(directory_path, paste("OtherPeoplesCode","energy.R", sep=separator), sep=separator))
 
 CLS <- function(y, X, tau) {
   if(missing(tau)) { tau <- tau_weights() }

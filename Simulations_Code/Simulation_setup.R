@@ -68,13 +68,16 @@ generate_cases <- function() {
   beta1_cases[["10_signals_strength_same"]] <- c(rep(1,10), rep(0,p-10))
   beta1_cases[["10_signals_strength_int_powers_of_2"]] <- c(sapply(c(4:-5), function(x) 2^x), rep(0, p-10))
   
+  xforms_cases <- list()
+#   x_forms_cases[["no_transformation"]] <- rep(function(x) x, p)
+  
   b0 <- rep(0,n)
   for(block_case in block_cases) {
     vc <- varcov.generate(p=p, blocks=block_case)
 #     b0 <- list()
 #     b1 <- list()
-#     x_col_order <- c(1:p)
-#     xforms <- rep(1,p)
+    x_col_order <- c(1:p)
+    xforms <- rep(1,p)
     
     for (beta1_case in 1:length(beta1_cases)) {
       b1 <- beta1_cases[[beta1_case]]
@@ -85,8 +88,8 @@ generate_cases <- function() {
         recalc <- F
       }
       
-      x_col_order <- c(1:p)
-      xforms <- rep(1,p)
+#       x_col_order <- c(1:p)
+#       xforms <- rep(1,p)
       
       # TODO: also pass string description?
       case <- list(beta1=b1, beta0=b0, varcov=vc, x_col_order=x_col_order, xforms=xforms)

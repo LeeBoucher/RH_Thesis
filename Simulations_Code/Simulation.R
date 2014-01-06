@@ -14,20 +14,23 @@ run_time <- Sys.time()
 
 library(Matrix)
 
-cluster <- T
+directory_path <- getwd()
+cluster <- length(grep("csse.rose-hulman.edu", directory_path, fixed=TRUE)) != 0
+if(cluster) {
+  separator <- "/"
+} else { 
+  separator <- "\\"
+  directory_path <- normalizePath(directory_path, winslash=separator, mustWork=TRUE)
+}
+source(paste(directory_path, "Simulation_functions.R", sep=separator))
+source(paste(directory_path, "Simulation_setup.R", sep=separator))
+source(paste(directory_path, paste("OtherPeoplesCode", "RandomNormal.R", sep=separator), sep=separator))
 
-if (cluster) { directory_path <- "~/Private/RH_Thesis/Simulations_Code/" 
-} else { directory_path <- "C:\\Users\\boucheka\\Documents\\Boucher_Thesis\\Simulations_Code\\" }
-source(paste(directory_path, "Simulation_functions.R", sep=""))
-source(paste(directory_path, "Simulation_setup.R", sep=""))
-if(cluster) { source(paste(directory_path, "OtherPeoplesCode/RandomNormal.R", sep="")) 
-} else { source(paste(directory_path, "OtherPeoplesCode\\RandomNormal.R", sep="")) }
-
-initialize_values()
-# initialize_values(m=7)
+if(cluster){ initialize_values() 
+} else { initialize_values(n=2, m=5, p=10) }
+# initialize_values(m=3)
 # initialize_values(t=TRUE, m=3)
 # initialize_values(t=TRUE)
-# initialize_values(n=2, m=5, p=10)
 
 cases <- generate_cases()
 
