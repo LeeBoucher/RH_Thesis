@@ -34,6 +34,8 @@ initialize_values <- function(n, m, p, t=FALSE, s=1, dcorr_index=1, rs=0.3, seed
   dcorr_index <<- dcorr_index # index for distance correlation
   rs <<- rs
   
+  data_transformations <<- list("identity"=function(x) x, "x^2"=function(x) x^2, "e^x"=function(x) exp(x))
+  
 #   cases <<- generate_cases()
   
 #   corr.pearson <<- matrix(data=NA, nrow=p, ncol=m)
@@ -69,7 +71,10 @@ generate_cases <- function() {
   beta1_cases[["10_signals_strength_int_powers_of_2"]] <- c(sapply(c(4:-5), function(x) 2^x), rep(0, p-10))
   
   xforms_cases <- list()
-#   x_forms_cases[["no_transformation"]] <- rep(function(x) x, p)
+#   x_forms <- list("identity"=function(x) x, "x^2"=function(x) x^2, "e^x"=function(x) exp(x))
+  xforms_cases[["no_transformation"]] <- c(rep(1,p))
+  xforms_cases[["alternating_x_and_x^2"]] <- c(rep(c(1,2),p/2))
+  xforms_cases[["alternating_x_and_e^x"]] <- c(rep(c(1,3),p/2))
   
   b0 <- rep(0,n)
   for(block_case in block_cases) {
@@ -77,23 +82,16 @@ generate_cases <- function() {
 #     b0 <- list()
 #     b1 <- list()
     x_col_order <- c(1:p)
-    xforms <- rep(1,p)
     
     for (beta1_case in 1:length(beta1_cases)) {
       b1 <- beta1_cases[[beta1_case]]
       
-      if(beta1_case == 1) {
-        recalc <- T
-      } else {
-        recalc <- F
+      for (xforms_case in xforms_cases) {
+        xforms <- xforms_case
+        # TODO: also pass string description?
+        case <- list(beta1=b1, beta0=b0, varcov=vc, x_col_order=x_col_order, xforms=xforms)
+        cases[[length(cases) + 1]] <- case
       }
-      
-#       x_col_order <- c(1:p)
-#       xforms <- rep(1,p)
-      
-      # TODO: also pass string description?
-      case <- list(beta1=b1, beta0=b0, varcov=vc, x_col_order=x_col_order, xforms=xforms)
-      cases[[length(cases) + 1]] <- case
     }
   }
   return(cases)
@@ -113,6 +111,7 @@ get_case <- function(case) {
 
 generate_data <- function(varcov, beta1, beta0, x_col_order, xforms, rs_) {
   X <- rmvnorm(n, mu=rep(0,p), Sigma=varcov)
+  X <- matrix(mapply(function(x, i) data_transformations[[xforms[[i]]]](x), X, col(X)), nrow = nrow(X))
   
   if(sqrt(sum(beta1^2)) == 0) {
     e.sd <- 1
