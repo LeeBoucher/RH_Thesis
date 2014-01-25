@@ -83,7 +83,7 @@ single_iteration_all_cases <- function() {
     
     X <- matrix(data=NA, nrow=n, ncol=p)
     for (xforms in xforms_cases) {
-      case[["xforms"]] <- xforms
+#       case[["xforms"]] <- xforms
       X <- matrix(mapply(function(x, i) data_transformations[[xforms[[i]]]](x), rawX, col(rawX)), nrow = nrow(rawX))
       
       obj_matrix <- tau * t(X) %*% X + (1-tau)*diag(diag(t(X) %*% X))
@@ -146,24 +146,34 @@ iterate_m_times <- function() {
   } else { lapply(1:m, function(x) single_iteration_all_cases()) }
 }
 
+# case_description <- function(vc_ci,xf_ci, b1_ci) {
+#   vc_n <- names(varcov_cases)[[vc_ci]]
+#   xf_n <- names(xforms_cases)[[xf_ci]]
+#   b1_n <- names(beta1_cases)[[b1_ci]]
+#   name <- paste(c(vc_n, xf_n, b1_n), collapse=" | ", sep="")
+#   return(name)
+# }
+
 organize_data_by_case <- function(d) {
+  case_descriptions <- list()
+  for(vc in names(varcov_cases)) {
+    for (xforms in names(xforms_cases)) {
+      for (b1 in names(beta1_cases)) {
+        name <- paste(c(vc, xforms, b1), collapse=" | ", sep="")
+        case_descriptions[[length(case_descriptions) + 1]] <- name
+      }
+    }
+  }
   data_organized_by_case <- list()
+  for(description in case_descriptions) {
+    data_organized_by_case[[description]] <- list()
+  }
   
-#   for(c in 1:length(cases)) {
-#     case_params <- list(beta1=NA)
-#     #     case_params <- list(varcov=NA, x_col_order=NA, xforms=NA, beta1=NA)
-#     #     case_params$varcov <- cases[[c]][["varcov"]]
-#     case_params$beta1 <- cases[[c]][["beta1"]]
-#     #     case_params$x_col_order <- cases[[c]][["x_col_order"]]
-#     #     case_params$xforms <- cases[[c]][["xforms"]]
-#     results <- list()
-#     for(r in 1:m) {
-#       name <- paste("beta1hat", r, sep="")
-#       results[[name]] <- d[[r]][[c]][["beta1hat"]]
-#     }
-#     case <- list(case_params, results)
-#     data_organized_by_case[[length(data_organized_by_case) + 1]] <- case
-#   }
+  for(iteration in c(1:length(all_data))) {
+    for(case in c(1:length(iteration))) {
+      data_organized_by_case[[case]][[length(data_organized_by_case[[case]]) + 1]] <- all_data[[iteration]][[case]]
+    }
+  }
   
   return(data_organized_by_case)
 }

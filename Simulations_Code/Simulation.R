@@ -29,16 +29,16 @@ source(paste(directory_path, paste("OtherPeoplesCode", "RandomNormal.R", sep=sep
 
 if(cluster){ initialize_values() 
 } else { initialize_values(t=TRUE) }
-# initialize_values(n=2, m=5, p=10)
+initialize_values(n=2, m=5, p=10)
 # initialize_values(m=1)
 # initialize_values(m=3)
-# initialize_values(t=TRUE, m=3)
+# initialize_values(t=TRUE, m=10)
 
 initialize_cases()
 
 all_data <- iterate_m_times()
 
-# all_data_organized_by_case <- organize_data_by_case(all_data)
+all_data_organized_by_case <- organize_data_by_case(all_data)
 
 # for(j in 1:m) {
 #   for(c in 1:length(cases)) { # TODO: make it so that cases don't overwrite each other on anything we want to keep
