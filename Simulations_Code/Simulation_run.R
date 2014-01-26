@@ -69,6 +69,19 @@ initialize_cases <- function() {
   
 }
 
+# for(j in 1:m) {
+#   for(c in 1:length(cases)) { # TODO: make it so that cases don't overwrite each other on anything we want to keep
+#     generate_data(case=c)
+#     beta1hat <- CLS(y=y, X=X)
+# #     corr.pearson[,j] <- abs(cor(y,X))
+# #     for(k in 1:p) {
+# #       corr.dist[k,j] <- distance_corr(y,X[,k])
+# #     }
+# #     corr.dist[,j] <- apply(X, 2, function(X) distance_corr(y=y, X=X))
+#     
+#   }
+# }
+
 single_iteration_all_cases <- function() {
   cases <- list()
   
@@ -84,11 +97,13 @@ single_iteration_all_cases <- function() {
     X <- matrix(data=NA, nrow=n, ncol=p)
     for (xforms in xforms_cases) {
 #       case[["xforms"]] <- xforms
-      X <- matrix(mapply(function(x, i) data_transformations[[xforms[[i]]]](x), rawX, col(rawX)), nrow = nrow(rawX))
+      X <- transform_data_by_column(rawX=rawX, xforms=xforms)
+#       X <- matrix(mapply(function(x, i) data_transformations[[xforms[[i]]]](x), rawX, col(rawX)), nrow = nrow(rawX))
       
-      obj_matrix <- tau * t(X) %*% X + (1-tau)*diag(diag(t(X) %*% X))
-      inv_obj_matrix <- chol2inv(chol(obj_matrix))
-      inv_obj_matrix_times_XT <- inv_obj_matrix %*% t(X)
+#       obj_matrix <- tau * t(X) %*% X + (1-tau)*diag(diag(t(X) %*% X))
+#       inv_obj_matrix <- chol2inv(chol(obj_matrix))
+#       inv_obj_matrix_times_XT <- inv_obj_matrix %*% t(X)
+      inv_obj_matrix_times_XT <- CLS_Pearson_coefficients_for_y(X=X)
       # Rxx_dist <- distance_corr(X=X, y=X) # TODO: ??
       # distance_corr_inverse <- chol2inv(chol(tau * Rxx_dist + diag(1-tau,p))
       
@@ -97,6 +112,9 @@ single_iteration_all_cases <- function() {
         
         y <- generate_y(X=X, beta1=b1, varcov=vc)
 #         case[["y"]] <- y
+        
+        case[["pearson_corr_y_X"]] <- abs(cor(y,X))
+        case[["dist_corr_y_X"]] <- distance_corr(y=y,X=X)
         
         case[["beta_hat_CLS_pearson"]] <- inv_obj_matrix_times_XT %*% y
         # case[["beta_hat_CLS_dist"]] <- distance_corr_inverse %*% distance_corr(y=y, X=X)
@@ -107,6 +125,10 @@ single_iteration_all_cases <- function() {
     }
   }
   return(cases)
+}
+
+transform_data_by_column <- function(rawX, xforms) {
+  X <- matrix(mapply(function(x, i) data_transformations[[xforms[[i]]]](x), rawX, col(rawX)), nrow = nrow(rawX))
 }
 
 generate_y <- function(X, beta1, varcov, beta0=rep(0,n)) {
@@ -146,15 +168,7 @@ iterate_m_times <- function() {
   } else { lapply(1:m, function(x) single_iteration_all_cases()) }
 }
 
-# case_description <- function(vc_ci,xf_ci, b1_ci) {
-#   vc_n <- names(varcov_cases)[[vc_ci]]
-#   xf_n <- names(xforms_cases)[[xf_ci]]
-#   b1_n <- names(beta1_cases)[[b1_ci]]
-#   name <- paste(c(vc_n, xf_n, b1_n), collapse=" | ", sep="")
-#   return(name)
-# }
-
-organize_data_by_case <- function(d) {
+generate_descriptive_case_names <- function() {
   case_descriptions <- list()
   for(vc in names(varcov_cases)) {
     for (xforms in names(xforms_cases)) {
@@ -164,14 +178,50 @@ organize_data_by_case <- function(d) {
       }
     }
   }
+  return(case_descriptions)
+}
+
+get_descriptive_case_name <- function(vci, xfi, b1i) {
+  vc <- names(varcov_cases)[[vci]]
+  xf <- names(xforms_cases)[[xfi]]
+  b1 <- names(beta1_cases)[[b1i]]
+  name <- paste(c(vc, xf, b1), collapse=" | ", sep="")
+  return(name)
+}
+
+organize_data_by_kind <- function(d) {
+  data_organized_by_kind <- list()
+  kinds <- names(d[[1]][[1]])
+  case_names <- generate_descriptive_case_names()
+  for(k in kinds) {
+    cases_k <- list()
+    for(cn in case_names) {
+      cases_k[[cn]] <- list()
+    }
+    data_organized_by_kind[[k]] <- cases_k
+  }
+  
+  for(iteration in c(1:length(d))) {
+    for(case in c(1:length(case_names))) {
+      for(kind in c(1:length(kinds))) {
+        data_organized_by_kind[[kind]][[case]][[iteration]] <- d[[iteration]][[case]][[kind]]
+      }
+    }
+  }
+  
+  return(data_organized_by_kind)
+}
+
+organize_data_by_case <- function(d) {
+  case_descriptions <- generate_descriptive_case_names()
   data_organized_by_case <- list()
   for(description in case_descriptions) {
     data_organized_by_case[[description]] <- list()
   }
   
-  for(iteration in c(1:length(all_data))) {
-    for(case in c(1:length(iteration))) {
-      data_organized_by_case[[case]][[length(data_organized_by_case[[case]]) + 1]] <- all_data[[iteration]][[case]]
+  for(iteration in c(1:length(d))) {
+    for(case in c(1:length(d[[iteration]]))) {
+      data_organized_by_case[[case]][[length(data_organized_by_case[[case]]) + 1]] <- d[[iteration]][[case]]
     }
   }
   
