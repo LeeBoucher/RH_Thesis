@@ -114,7 +114,7 @@ single_iteration_all_cases <- function() {
 #         case[["y"]] <- y
         
         case[["pearson_corr_y_X"]] <- abs(cor(y,X))
-        case[["dist_corr_y_X"]] <- distance_corr(y=y,X=X)
+#         case[["dist_corr_y_X"]] <- distance_corr(y=y,X=X) # temporarily disabled because this takes about 3x as long as everything else in each iteration combined (quadruple total run time of simulations)
         
         case[["beta_hat_CLS_pearson"]] <- inv_obj_matrix_times_XT %*% y
         # case[["beta_hat_CLS_dist"]] <- distance_corr_inverse %*% distance_corr(y=y, X=X)

@@ -30,8 +30,8 @@ source(paste(directory_path, paste("OtherPeoplesCode", "RandomNormal.R", sep=sep
 
 if(cluster){ initialize_values() 
 } else { initialize_values(t=TRUE) }
-# initialize_values(n=2, m=5, p=10)
-initialize_values(m=1)
+initialize_values(n=2, m=5, p=10)
+# initialize_values(m=1)
 # initialize_values(m=10)
 # initialize_values(t=TRUE, m=10)
 
@@ -41,9 +41,9 @@ initialize_cases()
 # 
 # all_data <- iterate_m_times()
 # all_data_organized_by_case <- organize_data_by_case(all_data)
-all_data_organized_by_kind <- organize_data_by_kind(all_data)
+# all_data_organized_by_kind <- organize_data_by_kind(all_data)
 
-# all_data_organized_by_kind <- organize_data_by_kind(iterate_m_times())
+all_data_organized_by_kind <- organize_data_by_kind(iterate_m_times())
 
 run_time <- Sys.time() - run_time
 print(run_time)

@@ -35,7 +35,7 @@ CLS_Pearson_coefficients_for_y <- function(X) {
 
 CLS_Distance_Objective_Matrix <- function(X, tau) {
   if(missing(tau)) { tau <- tau_weights() }
-  obj_matrix <- tau * Rxx_dist(X) + (1-tau)*diag(rep(1, p))
+  obj_matrix <- tau * Rxx_dist(X) + (1-tau)*diag(rep(1, p)) # http://en.wikipedia.org/wiki/Covariance_matrix for Rxx
   #   inv_obj_matrix <- chol2inv(chol(obj_matrix))
 }
 
