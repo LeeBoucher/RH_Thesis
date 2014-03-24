@@ -34,8 +34,6 @@ initialize_values <- function(n, m, p, t=FALSE, s=1, dcorr_index=1, rs=0.3, seed
   dcorr_index <<- dcorr_index # index for distance correlation
   rs <<- rs
   
-  data_transformations <<- list("identity"=function(x) x, "x^2"=function(x) x^2, "e^x"=function(x) exp(x))
-  
 #   cases <<- generate_cases()
   
 #   corr.pearson <<- matrix(data=NA, nrow=p, ncol=m)
@@ -54,46 +52,110 @@ initialize_values <- function(n, m, p, t=FALSE, s=1, dcorr_index=1, rs=0.3, seed
   
 }
 
-generate_cases <- function() {
-  cases <- list()
+initialize_cases <- function() {
   
-  block_cases <- list()
-  block_cases[["all_independent"]] <- c(0,p)
-  block_cases[["equicorrelated_0.3"]] <- c(0.3, p)
-  block_cases[["equicorrelated_0.6"]] <- c(0.6, p)
-  block_cases[["equicorrelated_0.9"]] <- c(0.9, p)
-#   block_cases[["block_equicorrelated_p/5_0.6_0.3"]] <- list(c(0.3, 0.8*p), c(0.6, 0.2*p))
+  varcov_cases <<- list()
+  beta1_cases <<- list()
+  beta0_cases <<- list()
+  data_transformations <<- list("identity"=function(x) x, "x^2"=function(x) x^2, "e^x"=function(x) exp(x))
+  xforms_cases <<- list()
   
-  beta1_cases <- list()
+  varcov_cases[["all_independent"]] <- varcov.generate(p=p, blocks=c(0,p))
+  varcov_cases[["equicorrelated_0.3"]] <- varcov.generate(p=p, blocks=c(0.3,p))
+  varcov_cases[["equicorrelated_0.6"]] <- varcov.generate(p=p, blocks=c(0.6,p))
+  varcov_cases[["equicorrelated_0.9"]] <- varcov.generate(p=p, blocks=c(0.9,p))
+  #   block_cases[["block_equicorrelated_p/5_0.6_0.3"]] <- varcov.generate(p=p, blocks=list(c(0.3, 0.8*p), c(0.6, 0.2*p)))
+  
   beta1_cases[["no_signal"]] <- rep(0,p)
   beta1_cases[["single_signal"]] <- c(1, rep(0, p-1))
   beta1_cases[["10_signals_strength_same"]] <- c(rep(1,10), rep(0,p-10))
   beta1_cases[["10_signals_strength_int_powers_of_2"]] <- c(sapply(c(4:-5), function(x) 2^x), rep(0, p-10))
   
-  xforms_cases <- list()
-#   x_forms <- list("identity"=function(x) x, "x^2"=function(x) x^2, "e^x"=function(x) exp(x))
+  beta0_cases[["zero_shift"]] <- rep(0,n)
+  
   xforms_cases[["no_transformation"]] <- c(rep(1,p))
   xforms_cases[["alternating_x_and_x^2"]] <- c(rep(c(1,2),p/2))
   xforms_cases[["alternating_x_and_e^x"]] <- c(rep(c(1,3),p/2))
   
-  b0 <- rep(0,n)
-  for(block_case in block_cases) {
-    vc <- varcov.generate(p=p, blocks=block_case)
-#     b0 <- list()
-#     b1 <- list()
-    x_col_order <- c(1:p)
+}
+
+generate_cases <- function() {
+  cases <- list()
+  
+#   block_cases <- list()
+#   block_cases[["all_independent"]] <- c(0,p)
+#   block_cases[["equicorrelated_0.3"]] <- c(0.3, p)
+#   block_cases[["equicorrelated_0.6"]] <- c(0.6, p)
+#   block_cases[["equicorrelated_0.9"]] <- c(0.9, p)
+# #   block_cases[["block_equicorrelated_p/5_0.6_0.3"]] <- list(c(0.3, 0.8*p), c(0.6, 0.2*p))
+#   
+#   beta1_cases <- list()
+#   beta1_cases[["no_signal"]] <- rep(0,p)
+#   beta1_cases[["single_signal"]] <- c(1, rep(0, p-1))
+#   beta1_cases[["10_signals_strength_same"]] <- c(rep(1,10), rep(0,p-10))
+#   beta1_cases[["10_signals_strength_int_powers_of_2"]] <- c(sapply(c(4:-5), function(x) 2^x), rep(0, p-10))
+#   
+#   xforms_cases <- list()
+# #   x_forms <- list("identity"=function(x) x, "x^2"=function(x) x^2, "e^x"=function(x) exp(x))
+#   xforms_cases[["no_transformation"]] <- c(rep(1,p))
+#   xforms_cases[["alternating_x_and_x^2"]] <- c(rep(c(1,2),p/2))
+#   xforms_cases[["alternating_x_and_e^x"]] <- c(rep(c(1,3),p/2))
+  
+#   b0 <- rep(0,n)
+#   for(block_case in block_cases) {
+#     vc <- varcov.generate(p=p, blocks=block_case)
+#     x_col_order <- c(1:p)
+#     
+#     for (beta1_case in 1:length(beta1_cases)) {
+#       b1 <- beta1_cases[[beta1_case]]
+#       
+#       for (xforms_case in xforms_cases) {
+#         xforms <- xforms_case
+#         # TODO: also pass string description?
+#         case <- list(beta1=b1, beta0=b0, varcov=vc, x_col_order=x_col_order, xforms=xforms)
+#         cases[[length(cases) + 1]] <- case
+#       }
+#     }
+#   }
+  
+  tau <- 0.5 # TODO: This is not ideal way to set
+  mu <- rep(0,p)
+  
+  for (vc in varcov_cases) {
+    case <- list()
+    case[["varcov"]] <- vc
+    rawX <- rmvnorm(n, mu=mu, Sigma=vc)
     
-    for (beta1_case in 1:length(beta1_cases)) {
-      b1 <- beta1_cases[[beta1_case]]
+    for (xforms in xforms_cases) {
+      case[["xforms"]] <- xforms
+      X <- matrix(mapply(function(x, i) data_transformations[[xforms[[i]]]](x), rawX, col(X)), nrow = nrow(X))
       
-      for (xforms_case in xforms_cases) {
-        xforms <- xforms_case
-        # TODO: also pass string description?
-        case <- list(beta1=b1, beta0=b0, varcov=vc, x_col_order=x_col_order, xforms=xforms)
+      
+#       XTX <- t(X) %*% X   # Don't want to chew up memory unnecessarily
+      objective_matrix <- tau * t(X) %*% X + (1-tau)*diag(diag(t(X) %*% X))
+      inv_obj_matrix <- chol2inv(chol(obj_matrix))
+#       rm(objective_matrix)
+      inv_obj_matrix_times_XT <- inv_obj_matrix %*% t(X)
+#       Rxx_dist <- distance_corr(X=X, y=X) # TODO: ??
+#       distance_corr_inverse <- chol2inv(chol(tau * Rxx_dist + diag(1-tau,p))
+#       rm(inv_obj_matrix)
+      
+      for (b1 in beta1_cases) {
+        case[["beta1"]] <- b1
+        
+        y <- generate_y(X=X, beta1=b1)
+        case[["y"]] <- y
+        
+        case[["beta_hat_CLS_pearson"]] <- inv_obj_matrix_times_XT %*% y
+#         case[["beta_hat_CLS_dist"]] <- distance_corr_inverse %*% distance_corr(y=y, X=X)
+#         case[["beta_hat_SIS"]] <- # TODO
+        
         cases[[length(cases) + 1]] <- case
       }
     }
+#     rm(rawX)
   }
+  
   return(cases)
 }
 
@@ -109,9 +171,10 @@ get_case <- function(case) {
   return(list(beta1=beta1, beta0=beta0, varcov=varcov, x_col_order=x_col_order, xforms=xforms))
 }
 
-generate_data <- function(varcov, beta1, beta0, x_col_order, xforms, rs_) {
-  X <- rmvnorm(n, mu=rep(0,p), Sigma=varcov)
-  X <- matrix(mapply(function(x, i) data_transformations[[xforms[[i]]]](x), X, col(X)), nrow = nrow(X))
+# generate_data <- function(varcov, beta1, beta0, x_col_order, xforms, rs_) {
+generate_y <- function(X, beta1, beta0=rep(0,n)) {
+#   X <- rmvnorm(n, mu=rep(0,p), Sigma=varcov)
+#   X <- matrix(mapply(function(x, i) data_transformations[[xforms[[i]]]](x), X, col(X)), nrow = nrow(X))
   
   if(sqrt(sum(beta1^2)) == 0) {
     e.sd <- 1
@@ -124,7 +187,8 @@ generate_data <- function(varcov, beta1, beta0, x_col_order, xforms, rs_) {
   
   y <- e + X %*% beta1 + beta0
   
-  return(list(X=X, y=y))
+#   return(list(X=X, y=y))
+  return(y)
 }
 
 run_case <- function(beta1, beta0, varcov, x_col_order, xforms) { 

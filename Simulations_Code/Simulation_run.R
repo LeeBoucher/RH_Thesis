@@ -13,6 +13,7 @@
 # library(mvtnorm)
 library(Matrix)
 if(cluster) { library(multicore) }
+# library(SIS)
 
 # Set initial values, define functions for generating data in linear model
 
@@ -67,45 +68,34 @@ initialize_cases <- function() {
   beta0_cases <<- beta0_cases
   xforms_cases <<- xforms_cases
   
+  case_names <<- generate_descriptive_case_names()  
 }
-
-# for(j in 1:m) {
-#   for(c in 1:length(cases)) { # TODO: make it so that cases don't overwrite each other on anything we want to keep
-#     generate_data(case=c)
-#     beta1hat <- CLS(y=y, X=X)
-# #     corr.pearson[,j] <- abs(cor(y,X))
-# #     for(k in 1:p) {
-# #       corr.dist[k,j] <- distance_corr(y,X[,k])
-# #     }
-# #     corr.dist[,j] <- apply(X, 2, function(X) distance_corr(y=y, X=X))
-#     
-#   }
-# }
 
 single_iteration_all_cases <- function() {
   cases <- list()
   
-  tau <- 0.5 # TODO: This is not ideal way to set
+  tau <- tau_weights()
   mu <- rep(0,p)
   
   rawX <- matrix(data=NA, nrow=n, ncol=p)
   for (vc in varcov_cases) {
     case <- list()
-#     case[["varcov"]] <- vc
     rawX <- rmvnorm(n, mu=mu, Sigma=vc)
     
     X <- matrix(data=NA, nrow=n, ncol=p)
     for (xforms in xforms_cases) {
-#       case[["xforms"]] <- xforms
       X <- transform_data_by_column(rawX=rawX, xforms=xforms)
-#       X <- matrix(mapply(function(x, i) data_transformations[[xforms[[i]]]](x), rawX, col(rawX)), nrow = nrow(rawX))
-      
-#       obj_matrix <- tau * t(X) %*% X + (1-tau)*diag(diag(t(X) %*% X))
+#       obj_matrix <- CLS_Pearson_Objective_Matrix(X=X, tau=tau)
 #       inv_obj_matrix <- chol2inv(chol(obj_matrix))
-#       inv_obj_matrix_times_XT <- inv_obj_matrix %*% t(X)
+      tX <- t(X)
+#       inv_obj_matrix_times_XT <- inv_obj_matrix %*% tX
       inv_obj_matrix_times_XT <- CLS_Pearson_coefficients_for_y(X=X)
-      # Rxx_dist <- distance_corr(X=X, y=X) # TODO: ??
-      # distance_corr_inverse <- chol2inv(chol(tau * Rxx_dist + diag(1-tau,p))
+      
+      Rxx_dist <- distance_corr(X=X, y=X)
+#       distance_corr_inverse <- chol2inv(chol(tau * Rxx_dist + diag(1-tau,p)))
+      distance_corr_inverse <- solve(tau * Rxx_dist + diag(1-tau,p))
+      
+      centered_scaled_X <- scale(X, center=TRUE, scale=TRUE)
       
       for (b1 in beta1_cases) {
 #         case[["beta1"]] <- b1
@@ -113,12 +103,32 @@ single_iteration_all_cases <- function() {
         y <- generate_y(X=X, beta1=b1, varcov=vc)
 #         case[["y"]] <- y
         
-        case[["pearson_corr_y_X"]] <- abs(cor(y,X))
-#         case[["dist_corr_y_X"]] <- distance_corr(y=y,X=X) # temporarily disabled because this takes about 3x as long as everything else in each iteration combined (quadruple total run time of simulations)
+        centered_scaled_y <- scale(y, center=TRUE, scale=TRUE)
         
-        case[["beta_hat_CLS_pearson"]] <- inv_obj_matrix_times_XT %*% y
-        # case[["beta_hat_CLS_dist"]] <- distance_corr_inverse %*% distance_corr(y=y, X=X)
-        # case[["beta_hat_SIS"]] <- # TODO
+        Rxy_dist <- distance_corr(y=y,X=X)
+        case[["dist_corr_y_X"]] <- Rxy_dist
+        # temporarily disabled because this takes about 3x as long as
+        # everything else in each iteration combined 
+        # (quadruple total run time of simulations)
+        
+        beta_hat_CLS_pearson <- inv_obj_matrix_times_XT %*% y
+        beta_hat_CLS_dist <- distance_corr_inverse %*% Rxy_dist
+        case[["beta_hat_CLS_pearson"]] <- beta_hat_CLS_pearson
+        case[["beta_hat_CLS_dist"]] <- beta_hat_CLS_dist
+       
+#         order_beta_hat_CLS_pearson <- order(abs(order(beta_hat_CLS_pearson)))
+#         order_beta_hat_CLS_dist <- order(abs(order(beta_hat_CLS_dist)))
+#         case[["order_beta_hat_CLS_pearson"]] <- order_beta_hat_CLS_pearson
+#         case[["order_beta_hat_CLS_dist"]] <- order_beta_hat_CLS_dist
+        
+        pearson_corr_y_X <- abs(cor(y,X))
+        pearson_corr_centered_scaled_y_and_X <- abs(cor(centered_scaled_y, centered_scaled_X))
+        beta_hat_SIS <- SIS_beta_hat(tX=tX, y=y)
+#         order_beta_hat_SIS <- order(abs(order(beta_hat_SIS)))
+        case[["beta_hat_SIS"]] <- beta_hat_SIS
+#         case[["order_beta_hat_SIS"]] <- order_beta_hat_SIS
+        case[["max_abs_pearson_corr_y_X"]] <- max(pearson_corr_y_X)
+        case[["med_abs_pearson_corr_y_X"]] <- median(pearson_corr_y_X)
         
         cases[[length(cases) + 1]] <- case
       }
@@ -138,7 +148,7 @@ generate_y <- function(X, beta1, varcov, beta0=rep(0,n)) {
   } else {
     ss <- ((1-rs^2)*t(beta1) %*% varcov %*% beta1)/(rs^2)
     v <- var(X %*% beta1)
-    e.sd <- v/(v + ss)
+    e.sd <- sqrt(v/(v + ss))
   }
   e <- c(data=rnorm(n, mean=0, sd=e.sd))
   
@@ -192,7 +202,7 @@ get_descriptive_case_name <- function(vci, xfi, b1i) {
 organize_data_by_kind <- function(d) {
   data_organized_by_kind <- list()
   kinds <- names(d[[1]][[1]])
-  case_names <- generate_descriptive_case_names()
+#   case_names <- generate_descriptive_case_names()
   for(k in kinds) {
     cases_k <- list()
     for(cn in case_names) {
@@ -212,18 +222,26 @@ organize_data_by_kind <- function(d) {
   return(data_organized_by_kind)
 }
 
-organize_data_by_case <- function(d) {
-  case_descriptions <- generate_descriptive_case_names()
-  data_organized_by_case <- list()
-  for(description in case_descriptions) {
-    data_organized_by_case[[description]] <- list()
-  }
-  
-  for(iteration in c(1:length(d))) {
-    for(case in c(1:length(d[[iteration]]))) {
-      data_organized_by_case[[case]][[length(data_organized_by_case[[case]]) + 1]] <- d[[iteration]][[case]]
-    }
-  }
-  
-  return(data_organized_by_case)
+# organize_data_by_case <- function(d) {
+#   case_descriptions <- generate_descriptive_case_names()
+#   data_organized_by_case <- list()
+#   for(description in case_descriptions) {
+#     data_organized_by_case[[description]] <- list()
+#   }
+#   
+#   for(iteration in c(1:length(d))) {
+#     for(case in c(1:length(d[[iteration]]))) {
+#       data_organized_by_case[[case]][[length(data_organized_by_case[[case]]) + 1]] <- d[[iteration]][[case]]
+#     }
+#   }
+#   
+#   return(data_organized_by_case)
+# }
+
+write_and_save_data <- function(data) {
+  # TODO
+  # save(all_data_organized_by_kind, "../Results/Simulation")
+#   write(all_data_organized_by_kind, file="../Results/Simulation.txt")
+  # save(all_data_organized_by_kind, file="Simulation_results.txt", ascii=TRUE)
+  save(all_data_organized_by_kind, file="../Results/Simulation.txt")
 }
