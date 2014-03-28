@@ -50,7 +50,7 @@ initialize_cases <- function() {
   varcov_cases[["equicorrelated_0.3"]] <- varcov.generate(p=p, blocks=c(0.3,p))
   varcov_cases[["equicorrelated_0.6"]] <- varcov.generate(p=p, blocks=c(0.6,p))
   varcov_cases[["equicorrelated_0.9"]] <- varcov.generate(p=p, blocks=c(0.9,p))
-  #   block_cases[["block_equicorrelated_p/5_0.6_0.3"]] <- varcov.generate(p=p, blocks=list(c(0.3, 0.8*p), c(0.6, 0.2*p)))
+  block_cases[["block_equicorrelated_p/5_0.6_0.3"]] <- varcov.generate(p=p, blocks=list(c(0.3, 0.8*p), c(0.6, 0.2*p)))
   
   beta1_cases[["no_signal"]] <- rep(0,p)
   beta1_cases[["single_signal"]] <- c(1, rep(0, p-1))
@@ -98,10 +98,8 @@ single_iteration_all_cases <- function() {
       centered_scaled_X <- scale(X, center=TRUE, scale=TRUE)
       
       for (b1 in beta1_cases) {
-#         case[["beta1"]] <- b1
         
         y <- generate_y(X=X, beta1=b1, varcov=vc)
-#         case[["y"]] <- y
         
         centered_scaled_y <- scale(y, center=TRUE, scale=TRUE)
         

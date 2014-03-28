@@ -10,6 +10,7 @@
 
 ################################################################################
 
+time_total <- time_run <- Sys.time()
 library(Matrix)
 library(energy)
 
@@ -29,8 +30,8 @@ source(paste(directory_path, paste("OtherPeoplesCode", "RandomNormal.R", sep=sep
 time_run <- Sys.time()
 
 if(cluster){ initialize_values() } else { initialize_values(t=TRUE) }
-initialize_values(n=2, m=5, p=10)
-initialize_values(m=1)
+# initialize_values(n=2, m=5, p=10)
+# initialize_values(m=1)
 # initialize_values(m=10)
 # initialize_values(t=TRUE, m=10)
 
@@ -47,4 +48,8 @@ all_data_organized_by_kind <- organize_data_by_kind(iterate_m_times())
 write_and_save_data()
 
 time_run <- Sys.time() - time_run
+print("Computation time: ")
 print(time_run)
+time_total <- Sys.time() - time_total
+print("Total time: ")
+print(time_total)
