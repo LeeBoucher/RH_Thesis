@@ -85,14 +85,10 @@ single_iteration_all_cases <- function() {
     X <- matrix(data=NA, nrow=n, ncol=p)
     for (xforms in xforms_cases) {
       X <- transform_data_by_column(rawX=rawX, xforms=xforms)
-#       obj_matrix <- CLS_Pearson_Objective_Matrix(X=X, tau=tau)
-#       inv_obj_matrix <- chol2inv(chol(obj_matrix))
       tX <- t(X)
-#       inv_obj_matrix_times_XT <- inv_obj_matrix %*% tX
       inv_obj_matrix_times_XT <- CLS_Pearson_coefficients_for_y(X=X)
       
       Rxx_dist <- distance_corr(X=X, y=X)
-#       distance_corr_inverse <- chol2inv(chol(tau * Rxx_dist + diag(1-tau,p)))
       distance_corr_inverse <- solve(tau * Rxx_dist + diag(1-tau,p))
       
       centered_scaled_X <- scale(X, center=TRUE, scale=TRUE)
@@ -105,26 +101,16 @@ single_iteration_all_cases <- function() {
         
         Rxy_dist <- distance_corr(y=y,X=X)
         case[["dist_corr_y_X"]] <- Rxy_dist
-        # temporarily disabled because this takes about 3x as long as
-        # everything else in each iteration combined 
-        # (quadruple total run time of simulations)
         
         beta_hat_CLS_pearson <- inv_obj_matrix_times_XT %*% y
         beta_hat_CLS_dist <- distance_corr_inverse %*% Rxy_dist
         case[["beta_hat_CLS_pearson"]] <- beta_hat_CLS_pearson
         case[["beta_hat_CLS_dist"]] <- beta_hat_CLS_dist
-       
-#         order_beta_hat_CLS_pearson <- order(abs(order(beta_hat_CLS_pearson)))
-#         order_beta_hat_CLS_dist <- order(abs(order(beta_hat_CLS_dist)))
-#         case[["order_beta_hat_CLS_pearson"]] <- order_beta_hat_CLS_pearson
-#         case[["order_beta_hat_CLS_dist"]] <- order_beta_hat_CLS_dist
         
         pearson_corr_y_X <- abs(cor(y,X))
         pearson_corr_centered_scaled_y_and_X <- abs(cor(centered_scaled_y, centered_scaled_X))
         beta_hat_SIS <- SIS_beta_hat(tX=tX, y=y)
-#         order_beta_hat_SIS <- order(abs(order(beta_hat_SIS)))
         case[["beta_hat_SIS"]] <- beta_hat_SIS
-#         case[["order_beta_hat_SIS"]] <- order_beta_hat_SIS
         case[["max_abs_pearson_corr_y_X"]] <- max(pearson_corr_y_X)
         case[["med_abs_pearson_corr_y_X"]] <- median(pearson_corr_y_X)
         
@@ -172,8 +158,7 @@ varcov.generate <- function(p, blocks, default_c) {
 }
 
 iterate_m_times <- function() {
-  if(cluster){ mclapply(1:m, function(x) single_iteration_all_cases(), mc.preschedule=TRUE) 
-  } else { lapply(1:m, function(x) single_iteration_all_cases()) }
+  mclapply(1:m, function(x) single_iteration_all_cases(), mc.preschedule=TRUE)
 }
 
 generate_descriptive_case_names <- function() {
@@ -200,7 +185,6 @@ get_descriptive_case_name <- function(vci, xfi, b1i) {
 organize_data_by_kind <- function(d) {
   data_organized_by_kind <- list()
   kinds <- names(d[[1]][[1]])
-#   case_names <- generate_descriptive_case_names()
   for(k in kinds) {
     cases_k <- list()
     for(cn in case_names) {
@@ -220,26 +204,10 @@ organize_data_by_kind <- function(d) {
   return(data_organized_by_kind)
 }
 
-# organize_data_by_case <- function(d) {
-#   case_descriptions <- generate_descriptive_case_names()
-#   data_organized_by_case <- list()
-#   for(description in case_descriptions) {
-#     data_organized_by_case[[description]] <- list()
-#   }
-#   
-#   for(iteration in c(1:length(d))) {
-#     for(case in c(1:length(d[[iteration]]))) {
-#       data_organized_by_case[[case]][[length(data_organized_by_case[[case]]) + 1]] <- d[[iteration]][[case]]
-#     }
-#   }
-#   
-#   return(data_organized_by_case)
-# }
-
 write_and_save_data <- function(data) {
-  # TODO
-  # save(all_data_organized_by_kind, "../Results/Simulation")
-#   write(all_data_organized_by_kind, file="../Results/Simulation.txt")
-  # save(all_data_organized_by_kind, file="Simulation_results.txt", ascii=TRUE)
-  save(all_data_organized_by_kind, file="../Results/Simulation.txt")
+  data_dir <- "../Results/"
+  data_name <- "simulation"
+  simulation_id_time <- strftime(Sys.time(), format="%y%m%d%H%M%S", tz="")
+  data_file_name <- paste(data_dir, simulation_id_time, data_name, sep="")
+  save(all_data_organized_by_kind, file=data_file_name)
 }
