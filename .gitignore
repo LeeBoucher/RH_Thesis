@@ -12,3 +12,5 @@ Simulations_Code/ScratchPaper.R
 # Trying things out without messing up the main simulations code (convenience 
 # functions for debugging, and becoming familiar with parts of R functionality)
 
+Results/
+# Since I don't want to put huge binaries on the github servers
