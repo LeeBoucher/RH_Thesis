@@ -12,7 +12,7 @@
 
 # library(mvtnorm)
 library(Matrix)
-if(cluster) { library(multicore) }
+library(multicore)
 # library(SIS)
 
 # Set initial values, define functions for generating data in linear model
@@ -50,7 +50,7 @@ initialize_cases <- function() {
   varcov_cases[["equicorrelated_0.3"]] <- varcov.generate(p=p, blocks=c(0.3,p))
   varcov_cases[["equicorrelated_0.6"]] <- varcov.generate(p=p, blocks=c(0.6,p))
   varcov_cases[["equicorrelated_0.9"]] <- varcov.generate(p=p, blocks=c(0.9,p))
-  block_cases[["block_equicorrelated_p/5_0.6_0.3"]] <- varcov.generate(p=p, blocks=list(c(0.3, 0.8*p), c(0.6, 0.2*p)))
+#   block_cases[["block_equicorrelated_p/5_0.6_0.3"]] <- varcov.generate(p=p, blocks=list(c(0.3, 0.8*p), c(0.6, 0.2*p)))
   
   beta1_cases[["no_signal"]] <- rep(0,p)
   beta1_cases[["single_signal"]] <- c(1, rep(0, p-1))
@@ -204,10 +204,8 @@ organize_data_by_kind <- function(d) {
   return(data_organized_by_kind)
 }
 
-write_and_save_data <- function(data) {
-  data_dir <- "../Results/"
-  data_name <- "simulation"
-  simulation_id_time <- strftime(Sys.time(), format="%y%m%d%H%M%S", tz="")
-  data_file_name <- paste(data_dir, simulation_id_time, data_name, sep="")
+write_and_save_data <- function(result_dir, data) {
+  data_name <- paste(strftime(Sys.time(), format="%y%m%d%H%M%S", tz=""), "simulation", sep="")
+  data_file_name <- paste(result_dir, data_name, sep=separator)
   save(all_data_organized_by_kind, file=data_file_name)
 }

@@ -10,11 +10,8 @@
 
 ################################################################################
 
-# library(mvtnorm)
 library(Matrix)
 library(MASS)
-# library(energy) # TODO: go back to this; temporarily using the source copy to 
-                  # not install library on remote machine
 source(paste(directory_path, 
              paste("OtherPeoplesCode","energy.R", sep=separator), sep=separator))
 
