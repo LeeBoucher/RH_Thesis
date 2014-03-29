@@ -14,9 +14,8 @@ time_total <- time_run <- Sys.time()
 library(Matrix)
 library(energy)
 
-directory_path <- getwd()
 separator <- "/"
-
+directory_path <- paste(getwd(), "Simulations_code", sep=separator)
 source(paste(directory_path, "Simulation_functions.R", sep=separator))
 source(paste(directory_path, "Simulation_run.R", sep=separator))
 source(paste(directory_path, paste("OtherPeoplesCode", "RandomNormal.R", sep=separator), sep=separator))
