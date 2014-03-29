@@ -14,3 +14,7 @@ Simulations_Code/ScratchPaper.R
 
 Results/
 # Since I don't want to put huge binaries on the github servers
+
+.RData
+.Rhistory
+
