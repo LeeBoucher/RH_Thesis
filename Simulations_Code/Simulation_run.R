@@ -205,7 +205,7 @@ organize_data_by_kind <- function(d) {
 }
 
 write_and_save_data <- function(result_dir, data) {
-  data_name <- paste(strftime(Sys.time(), format="%y%m%d%H%M%S", tz=""), "simulation", sep="")
+  data_name <- paste(run_id, "simulation", sep="")
   data_file_name <- paste(result_dir, data_name, sep=separator)
   save(all_data_organized_by_kind, file=data_file_name)
 }

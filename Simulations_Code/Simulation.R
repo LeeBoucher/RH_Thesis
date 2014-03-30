@@ -13,6 +13,17 @@
 time_total <- time_run <- Sys.time()
 library(Matrix)
 
+args=(commandArgs(TRUE))
+if(length(args)==0){
+  run_id = ""
+}else{
+#   for(i in 1:length(args)){
+#     eval(parse(text=args[[i]]))
+#   }
+  run_id=args[[1]]
+  print(run_id)
+}
+
 setwd("/home/ubuntu/RH_Thesis")
 separator <- "/"
 directory_path <- paste(getwd(), "Simulations_Code", sep=separator)
@@ -25,7 +36,7 @@ time_run <- Sys.time()
 
 initialize_values()
 # initialize_values(t=TRUE)
-# initialize_values(n=2, m=5, p=10)
+initialize_values(n=2, m=5, p=10)
 # initialize_values(m=1)
 # initialize_values(m=10)
 # initialize_values(t=TRUE, m=10)
@@ -33,7 +44,7 @@ initialize_values()
 # initialize_values(n=6, p=100, m=1) # 9.5s (t)
 # initialize_values(n=15, p=250, m=1) # 27s
 # initialize_values(n=50, p=600, m=1) # 3.3 min = 200s
-initialize_values(m=1) # 
+# initialize_values(m=1) # 
 
 initialize_cases()
 
